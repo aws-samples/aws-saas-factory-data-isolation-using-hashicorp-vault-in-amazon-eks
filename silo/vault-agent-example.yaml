@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-agent-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault-agent-example
+  template:
+    metadata:
+      name: vault-agent-example
+      labels:
+        app: vault-agent-example
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: "runtime/default"
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-inject-containers: myapp
+        vault.hashicorp.com/agent-image: "${REPO_URI_VAULT}@sha256:${VAULT_IMAGE_TAG}"
+        vault.hashicorp.com/agent-pre-populate: "false"
+        vault.hashicorp.com/agent-configmap: "vault-agent-config"
+        vault.hashicorp.com/agent-extra-secret: "vault-agent-approle-secret-${TENANT}"
+    spec:
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: myapp
+        image: "${REPO_URI_AWSCLI}@sha256:${AWSCLI_IMAGE_TAG}"
+        securityContext:
+          runAsUser: 10010
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - NET_RAW
+              - ALL
+        resources:
+          limits:
+            cpu: "1"
+            memory: "256Mi"
+          requests:
+            cpu: "0.5"
+            memory: "128Mi"
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do sleep infinity; done"]
+        env:
+        - name: AWS_SHARED_CREDENTIALS_FILE
+          value: "/vault/secrets/${TENANT}"

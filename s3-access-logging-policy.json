@@ -1,0 +1,39 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "S3ServerAccessLogsPolicy",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "logging.s3.amazonaws.com"
+            },
+            "Action": [
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::${VAULT_AGENT_TEMPLATES_BUCKET_LOGS}/*",
+            "Condition": {
+                "ArnLike": {
+                    "aws:SourceArn": "arn:aws:s3:::${VAULT_AGENT_TEMPLATES_BUCKET}"
+                },
+                "StringEquals": {
+                    "aws:SourceAccount": "${ACCOUNT_ID}"
+                }
+            }
+        },
+        {
+            "Sid": "AllowSSLRequestsOnly",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:*",
+            "Resource": ["arn:aws:s3:::${VAULT_AGENT_TEMPLATES_BUCKET_LOGS}",
+                        "arn:aws:s3:::${VAULT_AGENT_TEMPLATES_BUCKET_LOGS}/*"
+            ],
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "false"
+                }
+            }
+        }
+        
+    ]
+}

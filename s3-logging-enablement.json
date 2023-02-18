@@ -1,0 +1,6 @@
+{
+      "LoggingEnabled": {
+          "TargetBucket": "${VAULT_AGENT_TEMPLATES_BUCKET_LOGS}",
+          "TargetPrefix": "${VAULT_AGENT_TEMPLATES_BUCKET}/"
+       }
+}

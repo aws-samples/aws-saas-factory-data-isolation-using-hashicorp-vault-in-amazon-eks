@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-agent-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault-agent-example
+  template:
+    metadata:
+      name: vault-agent-example
+      labels:
+        app: vault-agent-example
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: "runtime/default"
+        eks.amazonaws.com/skip-containers: "myapp,vault-agent"
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-inject-containers: myapp
+        vault.hashicorp.com/agent-image: "${REPO_URI_VAULT}@sha256:${VAULT_IMAGE_TAG}"
+        vault.hashicorp.com/agent-pre-populate: "false"
+        vault.hashicorp.com/agent-copy-volume-mounts: vault-template-bootstrap
+        vault.hashicorp.com/agent-configmap: "vault-agent-config"
+        vault.hashicorp.com/agent-extra-secret: "vault-agent-approle-secret-${TENANT}"
+    spec:
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: ${TENANT}-sa
+      initContainers:
+      - name: vault-template-bootstrap
+        image: ${REPO_URI_AWSCLI}@sha256:${AWSCLI_IMAGE_TAG}
+        securityContext:
+          runAsUser: 10001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - NET_RAW
+              - ALL
+        resources:
+          limits:
+            cpu: "1"
+            memory: "256Mi"
+          requests:
+            cpu: "0.5"
+            memory: "128Mi"
+        volumeMounts:
+        - name: vault-agent-template-volume
+          mountPath: /vault/template
+        - name: bootstrap-volume
+          mountPath: /.aws
+        command: ["/bin/sh"]
+        args: ["-c", 'aws s3 cp s3://${DOLLAR}{VAULT_AGENT_TEMPLATE_S3_BUCKET}/${DOLLAR}{VAULT_AGENT_TEMPLATE_S3_OBJ_PATH}/ ${DOLLAR}{VAULT_AGENT_TEMPLATE_DEST_PATH} --recursive --exclude "*" --include "*.ctmpl"']
+        env:
+        - name: VAULT_AGENT_TEMPLATE_S3_BUCKET
+          value: ${VAULT_AGENT_TEMPLATES_BUCKET}
+        - name: VAULT_AGENT_TEMPLATE_S3_OBJ_PATH
+          value: ${TENANT}
+        - name: VAULT_AGENT_TEMPLATE_DEST_PATH
+          value: /vault/template
+      containers:
+      - name: myapp
+        image: ${REPO_URI_AWSCLI}@sha256:${AWSCLI_IMAGE_TAG}
+        securityContext:
+          runAsUser: 10010
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - NET_RAW
+              - ALL
+        resources:
+          limits:
+            cpu: "1"
+            memory: "256Mi"
+          requests:
+            cpu: "0.5"
+            memory: "128Mi"
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do sleep infinity; done"]
+        env:
+        - name: AWS_SHARED_CREDENTIALS_FILE
+          value: "/vault/secrets/credentials"
+      volumes:
+      - name: vault-agent-template-volume
+        emptyDir: {}
+      - name: bootstrap-volume
+        emptyDir: {}

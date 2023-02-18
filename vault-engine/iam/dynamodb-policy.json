@@ -1,0 +1,15 @@
+{
+ "Version": "2012-10-17",
+ "Statement": [
+   {
+     "Action": [
+       "dynamodb:GetItem",
+       "dynamodb:BatchGetItem",
+       "dynamodb:Query",
+       "dynamodb:DescribeTable"
+      ],
+      "Resource": "arn:aws:dynamodb:${AWS_REGION}:${ACCOUNT_ID}:table/Products_${RANDOM_STRING}",
+      "Effect": "Allow"
+    }
+  ]
+}

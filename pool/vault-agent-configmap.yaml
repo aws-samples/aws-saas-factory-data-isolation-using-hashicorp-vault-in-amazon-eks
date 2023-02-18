@@ -1,0 +1,36 @@
+kind: ConfigMap
+metadata:
+  name: vault-agent-config
+apiVersion: v1
+data:
+  config.hcl: |
+    exit_after_auth = false
+    
+    pid_file = "/home/vault/.pid"
+
+    auto_auth {
+        method "approle" {
+            mount_path = "auth/approle"
+            config = {
+                role = "${VAULT_AGENT_ROLE}"
+                remove_secret_id_file_after_reading = "false"
+                role_id_file_path = "/vault/custom/role-id"
+                secret_id_file_path = "/vault/custom/secret-id"
+            }
+        }
+
+        sink "file" {
+            config = {
+                path = "/home/vault/.token"
+            }
+        }
+    }
+    
+    vault = {
+      address = "https://${VAULT_ADDR}"
+    }
+
+    template {
+    destination = "/vault/secrets/${TENANT}"
+    source      = "/vault/template/${TENANT}.ctmpl"
+    }
