@@ -2,7 +2,11 @@
 
 The code shared here is intended to provide a sample implementation of SaaS Data Isolation with Dynamic Credentials Using HashiCorp Vault in Amazon EKS. The goal is to provide SaaS developers and architects with working code that will illustrate how multi-tenant SaaS applications can be design and delivered on AWS using Hashicorp Vault and Amazon EKS. The solution implements an identity model that simplifies the management of data access policies and credentials in isolated tenant environments. The focus here is more on giving developers a view into the working elements of the solution without going to the extent of making a full, production-ready solution.
 
-Note that the instructions below are intended to give you step-by-step, how-to instructions for getting this solution up and running in your own AWS account.
+Note that the instructions below are intended to give you step-by-step, how-to instructions for getting this solution up and running in your own AWS account. For a general description and overview of the solution, please see the 
+[blog post here](https://aws.amazon.com/blogs/apn/saas-data-isolation-with-dynamic-credentials-using-hashicorp-vault-in-amazon-eks/).
+
+For instructions and sample deployment code based on Terraform refer to the 
+[GitHub repo](https://github.com/hashicorp-publicsector/blog-dynamic-saas-cluster-aws-vault).
 
 ## Setting up the environment
 
